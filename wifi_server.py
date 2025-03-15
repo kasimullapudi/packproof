@@ -12,21 +12,23 @@ def show_wifi_page(root, on_success, selected_ssid=""):
     # Main container
     main_frame = tb.Frame(root)
     main_frame.pack(expand=True, fill="both", padx=20, pady=20)
-
+    # Back Button (Positioned at Top-Left Corner)
+    back_button = tb.Button(
+        main_frame,
+        text="← Back",
+        command=lambda: wifi_ssids.show_wifi_page(root, on_success),  # Go back to Wi-Fi list
+        bootstyle="danger",
+        width=10
+    )
+    back_button.pack(anchor="w", padx=5, pady=5)  # Align left
     # Title Label
     title_label = tb.Label(main_frame, text="Wi-Fi Connector", font=("Arial", 18, "bold"))
     title_label.pack(pady=15)
+    
+    # Display SSID at the top instead of asking for input
+    ssid_label = tb.Label(main_frame, text=f"Connected to: {selected_ssid}", font=("Arial", 14, "bold"))
+    ssid_label.pack(pady=10)
 
-    # SSID Entry
-    ssid_frame = tb.Frame(main_frame)
-    ssid_frame.pack(fill="x", pady=5)
-    tb.Label(ssid_frame, text="SSID:", font=("Arial", 12)).pack(side=tk.LEFT)
-    ssid_entry = tb.Entry(ssid_frame, width=30)
-    ssid_entry.pack(side=tk.RIGHT)
-    # Prepopulate the SSID field if a value was passed
-    if selected_ssid:
-        ssid_entry.insert(0, selected_ssid)
-        print("Prepopulated SSID:", selected_ssid)
 
     # Password Entry
     password_frame = tb.Frame(main_frame)
@@ -58,7 +60,7 @@ def show_wifi_page(root, on_success, selected_ssid=""):
 
     # Function to connect to Wi-Fi
     def connect_wifi():
-        ssid = ssid_entry.get().strip()
+        ssid = selected_ssid  # Use the SSID received from wifi_ssids.py
         password = password_entry.get().strip()
         if not ssid or not password:
             tb.dialogs.Messagebox.show_error("SSID and Password cannot be empty!", title="Error")
