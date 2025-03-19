@@ -139,8 +139,13 @@ class VideoRecorderApp:
             f"videos/recording_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
         os.makedirs("videos", exist_ok=True)
         
-        self.output = FfmpegOutput(filename, audio=False)
-        self.picam2.start_encoder(self.encoder, self.output)
+        # Validate output format
+        try:
+            self.output = FfmpegOutput(filename, audio=False)
+            self.picam2.start_encoder(self.encoder, self.output)
+        except Exception as e:
+            print(f"Error starting encoder: {e}")
+            return  # Stop function if encoder fails
 
         self.recStart = datetime.datetime.now()
         
