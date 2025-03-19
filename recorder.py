@@ -39,7 +39,6 @@ class VideoRecorderApp:
         self.start_preview()
 
     def create_widgets(self):
-        # Start frame
         self.start_frame = ttk.Frame(self.master)
         ttk.Label(self.start_frame, text="Order ID:", font=("Arial", 14)).pack(pady=10)
         self.order_id_entry = ttk.Entry(self.start_frame, font=("Arial", 14), width=20)
@@ -52,7 +51,6 @@ class VideoRecorderApp:
             width=20
         ).pack(pady=20)
         
-        # Record frame
         self.record_frame = ttk.Frame(self.master)
         self.preview_label = ttk.Label(self.record_frame)
         self.timer_label = ttk.Label(
@@ -62,7 +60,6 @@ class VideoRecorderApp:
             anchor='center'
         )
         
-        # Control buttons
         control_frame = ttk.Frame(self.record_frame)
         control_frame.pack(pady=20)
         self.start_btn = ttk.Button(
@@ -91,9 +88,24 @@ class VideoRecorderApp:
         self.start_frame.pack_forget()
         self.record_frame.pack(expand=True, fill=tk.BOTH)
         self.preview_label.pack(pady=10)
-        self.start_preview()
+        # Warm up the encoder: switch to recording mode and start encoder with a dummy output
+        if self.picam2.started:
+            self.picam2.stop()
+        self.picam2.configure(self.recording_config)
+        self.picam2.start()
+        dummy_output = FfmpegOutput("dummy.mp4", audio=False)
+        self.picam2.start_encoder(self.encoder, dummy_output)
+        #time.sleep(8)
+        self.picam2.stop_encoder()
+        # Revert to preview configuration for display
+        self.picam2.stop()
+        self.picam2.configure(self.preview_config)
+        self.picam2.start()
+        self.update_preview()
 
     def start_preview(self):
+        if self.picam2.started:
+            self.picam2.stop()
         self.picam2.configure(self.preview_config)
         self.picam2.start()
         self.update_preview()
@@ -110,58 +122,54 @@ class VideoRecorderApp:
         self.master.after(66, self.update_preview)
 
     def start_recording(self):
-        # Hide preview and show timer
+        # Stop preview and clear the image
+        self.preview_label.config(image='')
+        self.picam2.stop()
+        
+        # Sleep for 2 seconds before starting the recording
+        #time.sleep(2)
+
         self.preview_label.pack_forget()
         self.timer_label.pack(pady=50, fill=tk.BOTH, expand=True)
         
-        # Capture initial start time
-        self.recStart = datetime.datetime.now()
-        self.start_time = time.time()
-        self.recording = True
-        
-        # Reconfigure camera for recording
-        self.picam2.stop()
         self.picam2.configure(self.recording_config)
         self.picam2.start()
-        
-        # Start encoder and capture actual start time
+
         filename = f"videos/{self.order_id}.mp4" if self.order_id else \
             f"videos/recording_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
         os.makedirs("videos", exist_ok=True)
+        
         self.output = FfmpegOutput(filename, audio=False)
         self.picam2.start_encoder(self.encoder, self.output)
+
+        self.recStart = datetime.datetime.now()
         
-        # Log timing information
-        self.recActStart = datetime.datetime.now()
-        delay = (self.recActStart - self.recStart).total_seconds()
+        self.recording = True
+        self.recActStart = self.recStart
+
+        
+
+        self.start_btn.config(state=tk.DISABLED)
+        self.stop_btn.config(state=tk.NORMAL)
+        time.sleep(8)
+        self.start_time = time.time()
         print(f"\n=== Recording Started ===")
         print(f"Button press time: {self.recStart.strftime('%H:%M:%S.%f')}")
         print(f"Actual start time: {self.recActStart.strftime('%H:%M:%S.%f')}")
-        print(f"Start delay: {delay:.3f} seconds")
-        
-        # Update UI and start timer
-        self.start_btn.config(state=tk.DISABLED)
-        self.stop_btn.config(state=tk.NORMAL)
+        print(f"Start delay: 2.000 seconds")
         self.update_timer()
 
     def stop_recording(self):
         self.recording = False
-        # Show preview and hide timer
         self.timer_label.pack_forget()
         self.preview_label.pack(pady=10)
-        
-        # Stop recording
         self.picam2.stop_encoder()
         self.picam2.stop()
-        
-        # Calculate duration
         rec_end = datetime.datetime.now()
         total_duration = (rec_end - self.recActStart).total_seconds()
         print(f"\n=== Recording Stopped ===")
         print(f"Total duration: {total_duration:.2f} seconds")
         print(f"File saved to: videos/")
-        
-        # Reset UI
         self.start_btn.config(state=tk.NORMAL)
         self.stop_btn.config(state=tk.DISABLED)
         self.start_preview()
