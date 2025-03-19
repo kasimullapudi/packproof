@@ -29,7 +29,7 @@ def show_index_page(root, on_connected, on_not_connected):
     ssid = active_network.get('ssid', 'Unknown') if is_connected else ''
 
     # Set status message based on connection status
-    label_text = "Wi‑Fi Connected:\n {ssid}" if is_connected else "Please connect to a Wi‑Fi network"
+    label_text = f"Wi‑Fi Connected:\n {ssid}" if is_connected else "Please connect to a Wi‑Fi network"
     status_label = ttk.Label(frame, text=label_text, font=("Arial", 16))
     status_label.pack(pady=20)
 
