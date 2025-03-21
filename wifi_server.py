@@ -2,8 +2,13 @@ import tkinter as tk
 import ttkbootstrap as tb
 from ttkbootstrap.constants import *
 import subprocess
+import wifi_ssids
 
-def show_wifi_page(root, on_success, selected_ssid=""):
+def show_wifi_page(root, on_success, selected_ssid="", back_callback=None):
+    # If no back_callback provided, default to on_success (for backwards compatibility)
+    if back_callback is None:
+        back_callback = on_success
+
     print("Received SSID:", selected_ssid)  # Print the passed SSID to console
     root.geometry("480x320")
     for widget in root.winfo_children():
@@ -16,7 +21,7 @@ def show_wifi_page(root, on_success, selected_ssid=""):
     back_button = tb.Button(
         main_frame,
         text="← Back",
-        command=lambda: wifi_ssids.show_wifi_page(root, on_success),  # Go back to Wi-Fi list
+        command=lambda: wifi_ssids.show_wifi_page(root, back_callback),  # Go back to Wi-Fi list
         bootstyle="danger",
         width=10
     )
@@ -28,7 +33,6 @@ def show_wifi_page(root, on_success, selected_ssid=""):
     # Display SSID at the top instead of asking for input
     ssid_label = tb.Label(main_frame, text=f"Connected to: {selected_ssid}", font=("Arial", 14, "bold"))
     ssid_label.pack(pady=10)
-
 
     # Password Entry
     password_frame = tb.Frame(main_frame)

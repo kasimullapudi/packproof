@@ -22,6 +22,10 @@ def show_index_page(root, on_connected, on_not_connected):
     frame = ttk.Frame(root, padding=20)
     frame.pack(expand=True, fill='both')
 
+    # Configure the frame to center its contents
+    frame.grid_rowconfigure(0, weight=1)
+    frame.grid_columnconfigure(0, weight=1)
+
     # Scan for Wi‑Fi networks
     networks = wifi_ssids.scan_wifi_networks()
     active_network = next((net for net in networks if net.get('active', '').lower() == 'yes'), None)
@@ -30,8 +34,8 @@ def show_index_page(root, on_connected, on_not_connected):
 
     # Set status message based on connection status
     label_text = f"Wi‑Fi Connected:\n {ssid}" if is_connected else "Please connect to a Wi‑Fi network"
-    status_label = ttk.Label(frame, text=label_text, font=("Arial", 16))
-    status_label.pack(pady=20)
+    status_label = ttk.Label(frame, text=label_text, font=("Arial", 16), anchor="center", justify="center")
+    status_label.grid(row=0, column=0, pady=20)
 
     # After a delay, call the appropriate callback (routing is done in main.py)
     delay_ms = 2000  # 2-second delay

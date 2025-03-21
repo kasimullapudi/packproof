@@ -3,12 +3,12 @@ from index import show_index_page
 import wifi_ssids
 import wifi_server
 import recorder
-
+import last_page
 class MainApplication:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Wiâ€‘Fi & Video Manager")
-        self.root.attributes("-fullscreen", True)  # Fullscreen mode
+        #self.root.attributes("-fullscreen", True)  # Fullscreen mode
         self.root.bind("<Escape>", lambda e: root.destroy())  # Exit on Esc (optional)
         # self.root.geometry("800x600")
         
@@ -46,7 +46,7 @@ class MainApplication:
         """
         for widget in self.root.winfo_children():
             widget.destroy()
-        wifi_server.show_wifi_page(self.root, self.on_wifi_connection_success, selected_ssid=ssid)
+        wifi_server.show_wifi_page(self.root, self.on_wifi_connection_success, selected_ssid=ssid, back_callback=self.on_wifi_selected)
 
     def on_wifi_connection_success(self, ssid):
         """
@@ -56,6 +56,12 @@ class MainApplication:
         for widget in self.root.winfo_children():
             widget.destroy()
         self.recorder_app = recorder.VideoRecorderApp(self.root)
+
+    def go_to_last_page(self):
+        """Route to last_page.py after recording"""
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        last_page.VideoActions(self.root)
 
 if __name__ == "__main__":
     app = MainApplication()

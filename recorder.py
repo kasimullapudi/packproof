@@ -8,7 +8,7 @@ from PIL import Image, ImageTk
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder
 from picamera2.outputs import FfmpegOutput
-
+import last_page
 class VideoRecorderApp:
     def __init__(self, master):
         self.master = master
@@ -19,11 +19,11 @@ class VideoRecorderApp:
         self.picam2 = Picamera2()
         self.preview_config = self.picam2.create_video_configuration(
             main={"size": (640, 360)},
-            controls={"FrameRate": 24}
+            controls={"FrameRate": 30}
         )
         self.recording_config = self.picam2.create_video_configuration(
             main={"size": (1920, 1080)},
-            controls={"FrameRate": 24}
+            controls={"FrameRate": 30}
         )
         self.encoder = H264Encoder(bitrate=4000000, repeat=True, iperiod=15)
         
@@ -36,6 +36,7 @@ class VideoRecorderApp:
         # GUI components
         self.order_id = ""
         self.create_widgets()
+        self.running = True
         self.start_preview()
 
     def create_widgets(self):
@@ -82,6 +83,7 @@ class VideoRecorderApp:
         
         self.start_frame.pack(expand=True, fill=tk.BOTH)
 
+
     def ready_pressed(self):
         self.order_id = self.order_id_entry.get().strip()
         print(f"Order ID set: {self.order_id}")
@@ -93,8 +95,8 @@ class VideoRecorderApp:
             self.picam2.stop()
         self.picam2.configure(self.recording_config)
         self.picam2.start()
-        dummy_output = FfmpegOutput("dummy.mp4", audio=False)
-        self.picam2.start_encoder(self.encoder, dummy_output)
+        # dummy_output = FfmpegOutput("dummy.mp4", audio=False)
+        self.picam2.start_encoder(self.encoder)
         #time.sleep(8)
         self.picam2.stop_encoder()
         # Revert to preview configuration for display
@@ -111,6 +113,9 @@ class VideoRecorderApp:
         self.update_preview()
 
     def update_preview(self):
+        if not self.running:  # Check flag
+            return
+
         if not self.recording and self.picam2.started:
             try:
                 image = self.picam2.capture_array("main")
@@ -119,7 +124,8 @@ class VideoRecorderApp:
                 self.preview_label.config(image=self.preview_label.imgtk)
             except Exception as e:
                 print(f"Preview error: {e}")
-        self.master.after(66, self.update_preview)
+        if self.running:  # Only reschedule if still running
+            self.master.after(66, self.update_preview)
 
     def start_recording(self):
         # Stop preview and clear the image
@@ -165,11 +171,13 @@ class VideoRecorderApp:
         self.update_timer()
 
     def stop_recording(self):
+        self.running = False 
         self.recording = False
         self.timer_label.pack_forget()
         self.preview_label.pack(pady=10)
         self.picam2.stop_encoder()
         self.picam2.stop()
+        self.picam2.close()
         rec_end = datetime.datetime.now()
         total_duration = (rec_end - self.recActStart).total_seconds()
         print(f"\n=== Recording Stopped ===")
@@ -177,7 +185,10 @@ class VideoRecorderApp:
         print(f"File saved to: videos/")
         self.start_btn.config(state=tk.NORMAL)
         self.stop_btn.config(state=tk.DISABLED)
-        self.start_preview()
+        
+        for widget in self.master.winfo_children():
+            widget.destroy()
+        last_page.VideoActions(self.master)  # Start last_page.py
 
     def update_timer(self):
         if self.recording:
@@ -186,6 +197,7 @@ class VideoRecorderApp:
             self.master.after(1000, self.update_timer)
 
     def on_close(self):
+        self.running = False 
         if self.picam2.started:
             self.picam2.stop()
         self.master.destroy()
