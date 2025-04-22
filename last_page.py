@@ -6,7 +6,7 @@ import ttkbootstrap as ttkbs
 from threading import Thread
 
 # Server URL (replace with your actual server IP)
-SERVER_URL = "http://127.0.0.1:5000/upload"
+SERVER_URL = "http://192.168.31.204:5000/upload"
 
 class VideoActions:
     def __init__(self, root):
@@ -169,7 +169,7 @@ class SendPopup(BasePopup):
                     files={'file': (os.path.basename(self.video_path), f)},
                     stream=True,
                     headers={'Content-Length': str(total_size)},
-                    timeout=10
+                    timeout=60
                 )
 
                 if response.status_code != 200:

@@ -63,7 +63,7 @@ def show_wifi_page(parent, on_wifi_selected):
     # List Wi-Fi networks
     wifi_list = scan_wifi_networks()
     if not wifi_list:
-        no_wifi_label = ttk.Label(wifi_frame, text="No Wi-Fi networks found", font=("Arial", 12), foreground="danger")
+        no_wifi_label = ttk.Label(wifi_frame, text="No Wi-Fi networks found", font=("Arial", 12), foreground="red")
         no_wifi_label.pack(pady=10)
     else:
         for wifi in wifi_list:
